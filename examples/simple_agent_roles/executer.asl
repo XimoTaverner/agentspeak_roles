@@ -2,6 +2,8 @@
 
 role(tank).
 
+ataque(chungo)[role(tank)].
+
 +!start 
 <-
     .wait(100);

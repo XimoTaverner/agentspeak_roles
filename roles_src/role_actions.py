@@ -78,6 +78,15 @@ def _send(agent, term, intention):
     elif ilf.functor == "addRole":
         goal_type = roles_src.RoleGoalType.role
         trigger = agentspeak.Trigger.addition
+    elif ilf.functor == "delRole":
+        goal_type = roles_src.RoleGoalType.role
+        trigger = agentspeak.Trigger.removal
+    elif ilf.functor == "updateRole":
+        goal_type = roles_src.RoleGoalType.role
+        trigger = roles_src.Trigger.update
+    elif ilf.functor == "tellRole":
+        goal_type = roles_src.RoleGoalType.tellRole
+        trigger = roles_src.Trigger.addition
     else:
         raise agentspeak.AslError("unknown illocutionary force: %s" % ilf)
 
@@ -88,14 +97,28 @@ def _send(agent, term, intention):
     else:
         message = agentspeak.freeze(term.args[2], intention.scope, {})
 
-    tagged_message = message.with_annotation(
-        agentspeak.Literal("source", (agentspeak.Literal(agent.name),))
-    )
+    if ilf.functor in ["updateRole"]:
+        message = agentspeak.Literal(
+            "updateRole",
+            tuple(
+                (term.args[2]),
+            ),
+            frozenset(),
+        )
+        # Broadcast.
+        for receiver in receiving_agents:
+            receiver.call(trigger, goal_type, message, agentspeak.runtime.Intention())
 
-    # Broadcast.
-    for receiver in receiving_agents:
-        receiver.call(
-            trigger, goal_type, tagged_message, agentspeak.runtime.Intention()
+        yield
+    else:
+        tagged_message = message.with_annotation(
+            agentspeak.Literal("source", (agentspeak.Literal(agent.name),))
         )
 
-    yield
+        # Broadcast.
+        for receiver in receiving_agents:
+            receiver.call(
+                trigger, goal_type, tagged_message, agentspeak.runtime.Intention()
+            )
+
+        yield

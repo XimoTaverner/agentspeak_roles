@@ -3,9 +3,14 @@ from agentspeak.runtime import Agent, Intention, AslError
 
 import agentspeak
 import roles_src
+from agentspeak import Literal
 
 
 class RoleAgent(Agent):
+    def __init__(self, env, name, beliefs=None, rules=None, plans=None, roles=None):
+        super().__init__(env, name, beliefs, rules, plans)
+        # self.roles = collections.defaultdict(lambda: set()) if roles is None else roles
+
     def call(self, trigger, goal_type, term, calling_intention, delayed=False):
         # Modify beliefs.
         if goal_type == agentspeak.GoalType.belief:
@@ -76,7 +81,28 @@ class RoleAgent(Agent):
             goal_type == roles_src.RoleGoalType.role
             and trigger == agentspeak.Trigger.addition
         ):
-            self._add_role(term)
+            self._add_role(term, calling_intention.scope)
+            return True
+
+        if (
+            goal_type == roles_src.RoleGoalType.role
+            and trigger == agentspeak.Trigger.removal
+        ):
+            self._remove_role(term, calling_intention)
+            return True
+
+        if (
+            goal_type == roles_src.RoleGoalType.role
+            and trigger == roles_src.Trigger.update
+        ):
+            self._update_role(term, calling_intention)
+            return True
+
+        if (
+            goal_type == roles_src.RoleGoalType.tellRole
+            and trigger == roles_src.Trigger.addition
+        ):
+            self._tell_role(term, calling_intention)
             return True
 
         # If the goal is an achievement and the trigger is an addition, then the agent will add the goal to his list of intentions
@@ -114,5 +140,33 @@ class RoleAgent(Agent):
         return True
 
     def _add_role(self, term, scope):
-        Agent.add_belief(term, scope)
+        self.add_belief(Literal("role", [Literal(term.functor)]), scope)
         return True
+
+    def _remove_role(self, term, intention):
+        term = agentspeak.evaluate(
+            Literal("role", [Literal(term.functor)]), intention.scope
+        )
+        try:
+            group = term.literal_group()
+        except AttributeError:
+            raise AslError("expected belief literal, got: '%s'" % term)
+
+        choicepoint = object()
+
+        relevant_beliefs = self.beliefs[group]
+        for belief in relevant_beliefs:
+            intention.stack.append(choicepoint)
+            if agentspeak.unifies(term, belief):
+                relevant_beliefs.remove(belief)
+                return True
+            agentspeak.reroll(intention.scope, intention.stack, choicepoint)
+
+        return False
+
+    def _update_role(self, term, calling_intention):
+        self._remove_role(term.args[0], calling_intention)
+        self._add_role(term.args[1], calling_intention.scope)
+
+    # def _tell_role(self, term, calling_intention):
+    #    func = term.functor
