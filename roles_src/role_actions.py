@@ -110,6 +110,12 @@ def _send(agent, term, intention):
             receiver.call(trigger, goal_type, message, agentspeak.runtime.Intention())
 
         yield
+
+    elif ilf.functor in ["tellRole"]:
+        beliefs_to_send = []
+        for belief in agent.beliefs:
+            beliefs_to_send.append(next(iter(agent.beliefs[belief])))
+        yield
     else:
         tagged_message = message.with_annotation(
             agentspeak.Literal("source", (agentspeak.Literal(agent.name),))

@@ -168,5 +168,10 @@ class RoleAgent(Agent):
         self._remove_role(term.args[0], calling_intention)
         self._add_role(term.args[1], calling_intention.scope)
 
-    # def _tell_role(self, term, calling_intention):
-    #    func = term.functor
+    def _tell_role(self, term, calling_intention):
+        func = term.functor
+        # for belief in self.beliefs:
+        # print(next(iter(self.beliefs[belief])), "role", belief[0] == "role")
+
+        #    if belief[0] == "role":
+        #        print("---___")

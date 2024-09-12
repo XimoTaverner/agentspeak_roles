@@ -9,7 +9,7 @@ gun(snipper)[role(snipper)].
     //.send(executer,delRole,tank);
     //.send(executer,addRole,support);
     //.send(executer,updateRole,[support,tank]);
-    .send(executer, tellRole,snipper);
+    .send(executer, tellRole, snipper);
     .wait(1000);
     .send(executer,achieve,attack).
 
