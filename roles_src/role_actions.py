@@ -9,6 +9,7 @@ import math
 import threading
 from collections import deque
 import roles_src
+from agentspeak import Literal
 
 
 class RoleActions(agentspeak.Actions):
@@ -97,6 +98,14 @@ def _send(agent, term, intention):
     else:
         message = agentspeak.freeze(term.args[2], intention.scope, {})
 
+    if ilf.functor in ["tellRole"]:
+        role_content = []
+        func = term.args[2]
+        for belief in agent.beliefs:
+            if belief:
+                print("chachi", Literal(agent.beliefs[belief]))
+        yield
+
     if ilf.functor in ["updateRole"]:
         message = agentspeak.Literal(
             "updateRole",
@@ -108,7 +117,6 @@ def _send(agent, term, intention):
         # Broadcast.
         for receiver in receiving_agents:
             receiver.call(trigger, goal_type, message, agentspeak.runtime.Intention())
-
         yield
     else:
         tagged_message = message.with_annotation(
@@ -120,5 +128,4 @@ def _send(agent, term, intention):
             receiver.call(
                 trigger, goal_type, tagged_message, agentspeak.runtime.Intention()
             )
-
         yield
