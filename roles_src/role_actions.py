@@ -98,14 +98,6 @@ def _send(agent, term, intention):
     else:
         message = agentspeak.freeze(term.args[2], intention.scope, {})
 
-    if ilf.functor in ["tellRole"]:
-        role_content = []
-        func = term.args[2]
-        for belief in agent.beliefs:
-            if belief:
-                print("chachi", Literal(agent.beliefs[belief]))
-        yield
-
     if ilf.functor in ["updateRole"]:
         message = agentspeak.Literal(
             "updateRole",
@@ -121,8 +113,28 @@ def _send(agent, term, intention):
 
     elif ilf.functor in ["tellRole"]:
         beliefs_to_send = []
+        plans_to_send = []
         for belief in agent.beliefs:
-            beliefs_to_send.append(next(iter(agent.beliefs[belief])))
+            belief_iterator = next(iter(agent.beliefs[belief]))
+            annots = belief_iterator.annots
+            for annot in annots:
+                if annot.functor in ["role"]:
+                    if term.args[2] in annot.args:
+                        beliefs_to_send.append(
+                            agentspeak.freeze(belief_iterator, intention.scope, {})
+                        )
+        for plan_list in agent.plans:
+            for plan in agent.plans[plan_list]:
+                if plan.annotation is not None:
+                    for annot in plan.annotation.annotations:
+                        for arg in annot.terms:
+                            if term.args[2].__str__() == arg.__str__():
+                                plans_to_send.append(
+                                    agentspeak.freeze(plan, intention.scope, {})
+                                )
+        message = (beliefs_to_send, plans_to_send)
+        for receiver in receiving_agents:
+            receiver.call(trigger, goal_type, message, agentspeak.runtime.Intention())
         yield
     else:
         tagged_message = message.with_annotation(

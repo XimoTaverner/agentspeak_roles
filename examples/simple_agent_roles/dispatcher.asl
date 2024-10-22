@@ -6,17 +6,18 @@ gun(snipper)[role(snipper)].
 <-
     .send(executer,achieve,attack);
     .wait(1000);
-    //.send(executer,delRole,tank);
+    .send(executer,delRole,tank);
     //.send(executer,addRole,support);
-    //.send(executer,updateRole,[support,tank]);
+    .send(executer,updateRole,[tank,snipper]);
     .send(executer, tellRole, snipper);
-    .wait(1000);
-    .send(executer,achieve,attack).
+    //.send(executer, tell, hola(mundo));
+    .wait(3000);
+    .send(executer,achieve,shoot).
 
 @p1 [role(snipper)]
 +!shoot: role(snipper)
 <-
-    print("Bang").
+    .print("Bang").
 
 @p2 [role(snipper)]
 +!shoot.

@@ -21,6 +21,13 @@ class RoleAgent(Agent):
                 if not found:
                     return True
 
+        if (
+            goal_type == roles_src.RoleGoalType.tellRole
+            and trigger == roles_src.Trigger.addition
+        ):
+            self._tell_role(term, calling_intention)
+            return True
+
         # Freeze with caller scope.
         frozen = agentspeak.freeze(term, calling_intention.scope, {})
 
@@ -98,13 +105,6 @@ class RoleAgent(Agent):
             self._update_role(term, calling_intention)
             return True
 
-        if (
-            goal_type == roles_src.RoleGoalType.tellRole
-            and trigger == roles_src.Trigger.addition
-        ):
-            self._tell_role(term, calling_intention)
-            return True
-
         # If the goal is an achievement and the trigger is an addition, then the agent will add the goal to his list of intentions
         applicable_plans = self.plans[
             (trigger, goal_type, frozen.functor, len(frozen.args))
@@ -168,5 +168,8 @@ class RoleAgent(Agent):
         self._remove_role(term.args[0], calling_intention)
         self._add_role(term.args[1], calling_intention.scope)
 
-    # def _tell_role(self, term, calling_intention):
-    #    func = term.functor
+    def _tell_role(self, term, calling_intention):
+        for belief in term[0]:
+            self.add_belief(belief, calling_intention.scope)
+        for plan in term[1]:
+            self.add_plan(plan)
