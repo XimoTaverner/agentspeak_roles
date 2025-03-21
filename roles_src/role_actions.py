@@ -121,20 +121,36 @@ def _send(agent, term, intention):
                 if annot.functor in ["role"]:
                     if term.args[2] in annot.args:
                         beliefs_to_send.append(
-                            agentspeak.freeze(belief_iterator, intention.scope, {})
+                            # agentspeak.freeze(belief_iterator, intention.scope, {})
+                            str(belief_iterator)
+                            + "."
                         )
+
+        message = agentspeak.Literal("plain_text", (str(beliefs_to_send),), frozenset())
+        for receiver in receiving_agents:
+            receiver.call(
+                roles_src.Trigger.addition,
+                roles_src.RoleGoalType.tellRole,
+                message,
+                agentspeak.runtime.Intention(),
+            )
         for plan_list in agent.plans:
             for plan in agent.plans[plan_list]:
                 if plan.annotation is not None:
                     for annot in plan.annotation.annotations:
                         for arg in annot.terms:
                             if term.args[2].__str__() == arg.__str__():
-                                plans_to_send.append(
-                                    agentspeak.freeze(plan, intention.scope, {})
+                                strplan = agentspeak.runtime.plan_to_str(plan)
+                                message = agentspeak.Literal(
+                                    "plain_text", (strplan,), frozenset()
                                 )
-        message = (beliefs_to_send, plans_to_send)
-        for receiver in receiving_agents:
-            receiver.call(trigger, goal_type, message, agentspeak.runtime.Intention())
+                                for receiver in receiving_agents:
+                                    receiver.call(
+                                        agentspeak.Trigger.addition,
+                                        agentspeak.GoalType.tellHow,
+                                        message,
+                                        agentspeak.runtime.Intention(),
+                                    )
         yield
     else:
         tagged_message = message.with_annotation(

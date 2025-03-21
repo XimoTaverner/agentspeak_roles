@@ -1,9 +1,16 @@
 import collections
+import agentspeak.parser
 from agentspeak.runtime import Agent, Intention, AslError
 
 import agentspeak
+import agentspeak.runtime
 import roles_src
 from agentspeak import Literal
+from agentspeak.parser import parse_literal
+import ast
+import re
+
+LOGGER = agentspeak.get_logger(__name__)
 
 
 class RoleAgent(Agent):
@@ -110,7 +117,7 @@ class RoleAgent(Agent):
             (trigger, goal_type, frozen.functor, len(frozen.args))
         ]
         intention = Intention()
-        # Find matching plan.
+
         for plan in applicable_plans:
             for _ in agentspeak.unify_annotated(
                 plan.head, frozen, intention.scope, intention.stack
@@ -169,7 +176,28 @@ class RoleAgent(Agent):
         self._add_role(term.args[1], calling_intention.scope)
 
     def _tell_role(self, term, calling_intention):
-        for belief in term[0]:
+        belief_list = ast.literal_eval(term.args[0])
+        for belief in belief_list:
+            belief = self._parse_belief(belief)
             self.add_belief(belief, calling_intention.scope)
-        for plan in term[1]:
-            self.add_plan(plan)
+
+    def _parse_belief(self, belief):
+        tokens = []
+        # extend tokens with the tokens of the string plan
+        tokens.extend(
+            agentspeak.lexer.tokenize(
+                agentspeak.StringSource("<stdin>", belief), agentspeak.Log(LOGGER), 1
+            )
+        )
+        tok = tokens[0]
+        log = agentspeak.Log(LOGGER)
+        tokens.pop(0)
+        tokens = iter(tokens)
+        tok, ast_literal = parse_literal(tok, tokens, log)
+
+        visitor = agentspeak.runtime.BuildTermVisitor({})
+        return agentspeak.Literal(
+            ast_literal.functor,
+            (t.accept(visitor) for t in ast_literal.terms),
+            (t.accept(visitor) for t in ast_literal.annotations),
+        )
