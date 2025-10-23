@@ -436,13 +436,4 @@ class RoleAgent(Agent):
         if not has_role_annotation:
             return True
 
-        print(
-            "PLAN REQUIRED ROLES:",
-            plan_required_roles,
-            "AGENT ROLES:",
-            agent_roles,
-            "RESULT:",
-            not plan_required_roles.isdisjoint(agent_roles),
-            self.beliefs,
-        )
         return not plan_required_roles.isdisjoint(agent_roles)

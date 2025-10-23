@@ -15,7 +15,7 @@ with open(os.path.join(os.path.dirname(__file__), "executer.asl")) as source:
         roles_src.role_actions.actions,
         agent_cls=agent_cls,
     )
-print(agents[0].beliefs)
+
 
 with open(os.path.join(os.path.dirname(__file__), "dispatcher.asl")) as source:
     agents = env.build_agents(
@@ -24,7 +24,7 @@ with open(os.path.join(os.path.dirname(__file__), "dispatcher.asl")) as source:
         roles_src.role_actions.actions,
         agent_cls=agent_cls,
     )
-print(agents[0].beliefs)
+
 
 if __name__ == "__main__":
     env.run()
