@@ -1,23 +1,30 @@
 //!start.
 
-role(tank).
-
-ataque(chungo)[role(tank)].
+role([tank]).
 
 +!start 
 <-
     .wait(100);
     //.send(dispatcher,askHow,"+!shoot");
-    !start.
+    //!start.
+    !attack.
 
-+!attack: role(tank)
+
+@p1[role([tank])]
++!attack: role(X) 
 <-
+    .printbeliefs;
     .print("attack").
 
-+!heal: role(support)
+@p2[role([snipper])]
++!attack: role(X)
 <- 
+    .printbeliefs;
     .print("heal").
 
-+!attack.
++!attack
+<-
+    .printbeliefs;
+    .print("MAL").
 
 +!heal.
