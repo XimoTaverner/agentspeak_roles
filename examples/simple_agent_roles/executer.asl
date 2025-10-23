@@ -1,13 +1,5 @@
-//!start.
-
 role([tank]).
 
-+!start 
-<-
-    .wait(100);
-    //.send(dispatcher,askHow,"+!shoot");
-    //!start.
-    !attack.
 
 
 @p1[role([tank])]
@@ -25,6 +17,4 @@ role([tank]).
 +!attack
 <-
     .printbeliefs;
-    .print("MAL").
-
-+!heal.
+    .print("general").
